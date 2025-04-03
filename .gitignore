@@ -1,0 +1,10 @@
+# Ollama model and configuration data
+/ollama/
+
+# Environment files
+.env
+.env.local
+
+# OS specific files
+.DS_Store
+Thumbs.db
