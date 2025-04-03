@@ -65,12 +65,42 @@ OLLAMA_MODEL=phi3:mini-4k
 
 #### Example: Adding a Client Application to Docker Compose
 
-The docker-compose.yml includes a commented-out example client application that demonstrates how to integrate other services with Ollama. To enable it:
+You can add a client application to your docker-compose.yml file to interact with Ollama. Here's an example client that demonstrates the API:
 
-1. Remove the `profiles: ["disabled"]` line from the example-client service
-2. Run `docker-compose up -d`
+```yaml
+# Example client application that uses Ollama
+example-client:
+  image: curlimages/curl:latest
+  container_name: ollama-example-client
+  depends_on:
+    ollama:
+      condition: service_healthy
+  restart: "no"
+  command: >
+    sh -c "
+      # Wait to ensure Ollama is fully ready
+      sleep 5
+      
+      # List available models
+      echo '--- Available Models ---'
+      curl -s ollama:11434/api/tags | grep name
+      
+      # Run a basic prompt with the default model
+      echo '\\n--- Example Query ---'
+      curl -s ollama:11434/api/generate -d '{
+        \"model\": \"phi3:mini-4k\",
+        \"prompt\": \"Explain how to use Docker in 3 steps\",
+        \"stream\": false
+      }' | grep content
+      
+      # Keep container running for demonstration (remove in production)
+      echo '\\n--- Client finished ---'
+    "
+  networks:
+    - ollama-network
+```
 
-The example client shows how to:
+This example demonstrates how to:
 - Wait for Ollama to be healthy before making requests
 - List available models
 - Send prompts to the Ollama API
