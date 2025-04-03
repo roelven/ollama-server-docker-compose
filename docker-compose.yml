@@ -1,22 +1,39 @@
+# Ollama Docker Compose Configuration
+# This file sets up an Ollama LLM server that exposes an API on port 11434
+
 services:
   ollama:
-    build: .
     container_name: ollama
     image: ollama/ollama
     pull_policy: always
+    
+    # Health check ensures the Ollama service is running properly
     healthcheck:
       test: ollama ps || exit 1
       interval: 10s
+    
+    # Automatically restart unless explicitly stopped
     restart: unless-stopped
+    
+    # API port - required for other applications to interact with Ollama
     ports:
       - "11434:11434"
+    
+    # Persistent storage for models and configuration
     volumes:
       - ./ollama:/root/.ollama
+    
     environment:
-      # - OLLAMA_HOST='0.0.0.0'  # uncomment to make ollama reachable by other computers on your network
+      # Uncomment to make Ollama accessible from other machines on your network
+      # - OLLAMA_HOST='0.0.0.0'
+      
+      # Keep models loaded in memory for 5 minutes after last use
       - OLLAMA_KEEP_ALIVE=5m
-      - OLLAMA_FLASH_ATTENTION=0 # 1 is experimental as of 0.3.11
-    # If Ollama is not using the GPU, try  uncommenting those lines
+      
+      # Flash attention (0=disabled, 1=enabled but experimental)
+      - OLLAMA_FLASH_ATTENTION=0
+    
+    # GPU Configuration (uncomment for GPU acceleration)
     # deploy:
     #   resources:
     #     reservations:
