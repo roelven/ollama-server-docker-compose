@@ -63,6 +63,40 @@ NEXT_PUBLIC_OLLAMA_ENDPOINT_URL=http://localhost:11434
 OLLAMA_MODEL=phi3:mini-4k
 ```
 
+#### Example: Adding a Client Application to Docker Compose
+
+The docker-compose.yml includes a commented-out example client application that demonstrates how to integrate other services with Ollama. To enable it:
+
+1. Remove the `profiles: ["disabled"]` line from the example-client service
+2. Run `docker-compose up -d`
+
+The example client shows how to:
+- Wait for Ollama to be healthy before making requests
+- List available models
+- Send prompts to the Ollama API
+- Access Ollama by service name within the Docker network
+
+#### Building Your Own Integration
+
+To build your own application that uses Ollama:
+
+```yaml
+services:
+  # Your Ollama setup...
+  
+  your-app:
+    image: your-image
+    environment:
+      - OLLAMA_API_URL=http://ollama:11434
+    networks:
+      - ollama-network
+    depends_on:
+      ollama:
+        condition: service_healthy
+```
+
+This ensures your application only starts when Ollama is ready and can access it via the internal Docker network using the service name `ollama`.
+
 ### Stopping and Cleanup
 
 Stop the container:

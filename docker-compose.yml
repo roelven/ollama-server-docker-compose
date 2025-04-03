@@ -1,7 +1,9 @@
 # Ollama Docker Compose Configuration
 # This file sets up an Ollama LLM server that exposes an API on port 11434
+# along with an example client application
 
 services:
+  # Ollama LLM server service
   ollama:
     container_name: ollama
     image: ollama/ollama
@@ -22,10 +24,14 @@ services:
     # Persistent storage for models and configuration
     volumes:
       - ./ollama:/root/.ollama
+      
+    # Create a named network for services to communicate
+    networks:
+      - ollama-network
     
     environment:
-      # Uncomment to make Ollama accessible from other machines on your network
-      # - OLLAMA_HOST='0.0.0.0'
+      # Make Ollama accessible from other containers and machines on the network
+      - OLLAMA_HOST=0.0.0.0
       
       # Keep models loaded in memory for 5 minutes after last use
       - OLLAMA_KEEP_ALIVE=5m
@@ -41,3 +47,41 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+      
+  # Example client application that uses Ollama
+  example-client:
+    # Comment out this line to enable the example client
+    profiles: ["disabled"]
+    image: curlimages/curl:latest
+    container_name: ollama-example-client
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      sh -c "
+        # Wait to ensure Ollama is fully ready
+        sleep 5
+        
+        # List available models
+        echo '--- Available Models ---'
+        curl -s ollama:11434/api/tags | grep name
+        
+        # Run a basic prompt with the default model
+        echo '\\n--- Example Query ---'
+        curl -s ollama:11434/api/generate -d '{
+          \"model\": \"phi3:mini-4k\",
+          \"prompt\": \"Explain how to use Docker in 3 steps\",
+          \"stream\": false
+        }' | grep content
+        
+        # Keep container running for demonstration (remove in production)
+        echo '\\n--- Client finished ---'
+      "
+    networks:
+      - ollama-network
+
+# Define the network used by the services
+networks:
+  ollama-network:
+    driver: bridge
